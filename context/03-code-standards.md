@@ -56,6 +56,7 @@ All config in env files (`.env` backend, `.env.local` frontend); never hardcode.
 | Variable | Used in |
 | -------- | ------- |
 | `DATABASE_URL` | backend/core/db |
+| `FRONTEND_ORIGIN` | backend/core/config (CORS) |
 | `JWT_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | backend/core/security |
 | `MARKETDATA_*` (ADR-0001) | backend/marketdata |
 | `NEXT_PUBLIC_API_URL` | frontend/lib/api |

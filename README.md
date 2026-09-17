@@ -13,6 +13,45 @@ is the reusable part; the content is filled in per project.
 
 ---
 
+## Local Development — Invest Tracker
+
+Stack: Next.js (`frontend/`) + FastAPI (`backend/`), Postgres via Docker.
+Prereqs: Docker, Node 20 (`frontend/.nvmrc`), Python 3.12 with
+[`uv`](https://docs.astral.sh/uv/).
+
+### Native (day-to-day, hot reload)
+
+```
+docker compose up db                         # Postgres only
+
+cd backend
+cp .env.example .env
+uv sync
+uv run uvicorn app.main:app --reload         # http://localhost:8000/health
+
+cd frontend
+cp .env.local.example .env.local
+npm install
+npm run dev                                  # http://localhost:3000
+```
+
+### Full stack in Docker
+
+```
+docker compose up --build                    # db + backend + frontend
+```
+
+Frontend at `http://localhost:3000`, backend at `http://localhost:8000`.
+
+### Checks
+
+```
+cd backend && uv run ruff check . && uv run mypy .
+cd frontend && npm run lint && npm run typecheck
+```
+
+---
+
 ## How It Fits Together
 
 - **`AGENTS.md`** — the agent's operating manual. Read first every session.
