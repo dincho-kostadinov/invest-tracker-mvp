@@ -20,6 +20,12 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://invest:invest@db:5432/invest_tracker
       FRONTEND_ORIGIN: http://localhost:3000
+      # The browser (not the frontend container) is redirected here by Google
+      # OAuth, so this must be the host-mapped address, not Docker service DNS.
+      BACKEND_ORIGIN: http://localhost:8000
+      JWT_SECRET: dev-only-secret-do-not-use-in-prod
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
     ports:
       - "8000:8000"
     depends_on:

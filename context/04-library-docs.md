@@ -26,9 +26,35 @@ Order of authority: MCP docs → installed skill → this file → training know
 - Validate every external payload (market data) and every request at the boundary.
 - All config loaded from env via `pydantic-settings`.
 
-### Auth (Authlib / JWT + passlib)
-- Backend issues JWTs; Google OAuth + email/password (passwords hashed with passlib).
-- Current user resolved from the token in a `Depends`; the domain layer receives `user_id`, never the request.
+### Auth (Authlib + bcrypt)
+- Backend issues JWTs via `authlib.jose` (`app/core/security.py`) and runs the Google
+  OAuth client via `authlib.integrations.starlette_client.OAuth` (`app/core/oauth.py`,
+  backed by Starlette's `SessionMiddleware` — needs `itsdangerous`). Passwords are
+  hashed with `bcrypt` directly, not `passlib`: `passlib`'s bcrypt backend is broken
+  against `bcrypt>=4.1` (it probes a removed `__about__.__version__` attribute) and the
+  project is effectively unmaintained — see `specs/01-auth-app-shell.md`.
+- **bcrypt's limit is 72 bytes, not characters** — a password well under any
+  char-count limit can still crash `hashpw`/`checkpw` via multi-byte UTF-8 (emoji,
+  non-Latin scripts). Validate `len(password.encode("utf-8")) <= 72`, not
+  `len(password) <= 72`. `app/schemas/auth.py`'s `SignupRequest` validator is the
+  canonical check; `app/core/security.py`'s `hash_password`/`verify_password` guard it
+  too as defense-in-depth (never trust a Route Handler or form alone).
+- Google's OIDC `userinfo` must have `email_verified: true` before auto-linking that
+  email to an existing account (`google_callback` in `app/api/auth.py`) — otherwise
+  it's an account-takeover pattern (attaching a Google identity to someone else's
+  local account via an unverified email match).
+- Login always runs one bcrypt comparison, even for a nonexistent email (via a dummy
+  hash), to avoid a timing side-channel that would otherwise leak which emails are
+  registered.
+- `get_current_user` (`app/api/deps.py`) resolves the user from the `Authorization:
+  Bearer` header; the domain layer receives `user_id`, never the request.
+- **Frontend, not the backend, owns the session cookie** (`app/api/auth/*` Route
+  Handlers in the frontend) because frontend and backend are different origins — a
+  cookie set directly by the backend would be invisible to the frontend's `proxy.ts`
+  and to Server Components reading via `next/headers`. Backend `/auth/*` endpoints are
+  plain JSON (`{access_token}`), never `Set-Cookie`. See `01-architecture.md`'s
+  Authentication section and `specs/01-auth-app-shell.md` for the full mechanism,
+  including the Google OAuth same-origin-then-handoff flow.
 
 ### httpx (market data / connectors)
 - All outbound calls use `httpx` inside `marketdata` / `connectors`, behind the provider interface (ADR-0001). Cache; wrap in try/except; fall back to last snapshot or manual price.
@@ -38,8 +64,40 @@ Order of authority: MCP docs → installed skill → this file → training know
 
 ## Frontend
 
+### Next.js 16 — read the shipped docs before assuming an API
+`frontend/AGENTS.md` flags that this Next.js version has breaking changes versus
+training data. Confirmed so far, read from `frontend/node_modules/next/dist/docs/`:
+- **`middleware.ts` is renamed `proxy.ts`** (project root, exports a `proxy` function,
+  not `middleware`). The old name is deprecated, not just aliased.
+- `cookies()` from `next/headers` is async (`await cookies()`) and only works inside
+  Server Components (read-only) / Server Functions / Route Handlers (read+write) — not
+  inside `proxy.ts`, which instead reads `request.cookies.get(...)` (a `NextRequest`
+  API, no `next/headers` import).
+- `LayoutProps<'/route'>` / `PageProps<'/route'>` are globally-available generated
+  types (via `next dev`/`next build`/`next typegen`) for typed `params`/`children` —
+  used already in the scaffolded root `app/layout.tsx`. A route-group layout that
+  wraps multiple distinct pages (no single literal path) is typed with a plain
+  `{ children: ReactNode }` instead.
+- Before using any other Next API you haven't verified this session, check the docs
+  folder rather than assuming — re-check when the `next` version bumps.
+
 ### Typed API client (`frontend/lib/api`)
 - Generated from FastAPI's OpenAPI schema. Components call the client, never raw `fetch`.
+- Exception: the auth forms and `app/api/auth/*` Route Handlers use `lib/api/auth.ts`
+  and a hand-rolled `apiPost`/`apiGet` (`lib/api/client.ts`) — same reasoning as the
+  feature-00 health client, revisit once the generated client exists.
+
+### shadcn/ui
+- Not installed via the interactive CLI (non-interactive agent session) — wired by hand
+  to match `05-ui-tokens.md`/`06-ui-rules.md` exactly: `components.json`,
+  `app/globals.css` (`@theme inline` + `:root` tokens, no `.dark` block yet — light-only
+  MVP), `lib/utils.ts` (`cn()` via `clsx` + `tailwind-merge`).
+- Button ships only the 3 variants `06-ui-rules.md` defines (primary/outline/ghost) —
+  not shadcn's stock 6. Ghost's hover uses `--muted`, not shadcn's stock `--accent`,
+  because this project's `--accent` already means brand indigo (see `05-ui-tokens.md`)
+  — reusing it for a neutral hover would tint every ghost/link hover indigo.
+- Check `07-ui-registry.md` before adding a new primitive; add it there via `/imprint`
+  after building.
 
 ### Recharts
 - Charts in `components/`, fed already-computed data from the API — no return math on the frontend.

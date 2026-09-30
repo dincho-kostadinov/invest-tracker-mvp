@@ -57,7 +57,8 @@ All config in env files (`.env` backend, `.env.local` frontend); never hardcode.
 | -------- | ------- |
 | `DATABASE_URL` | backend/core/db |
 | `FRONTEND_ORIGIN` | backend/core/config (CORS) |
-| `JWT_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | backend/core/security |
+| `BACKEND_ORIGIN` | backend/core/config (Google OAuth redirect URI) |
+| `JWT_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | backend/core/security, backend/core/oauth |
 | `MARKETDATA_*` (ADR-0001) | backend/marketdata |
 | `NEXT_PUBLIC_API_URL` | frontend/lib/api |
 
@@ -66,5 +67,5 @@ All config in env files (`.env` backend, `.env.local` frontend); never hardcode.
 Before adding: does an existing dep / the framework already do it? A significant
 dependency needs an **ADR** + a `04-library-docs.md` section. Approved so far:
 
-- **Backend:** `fastapi`, `uvicorn`, `sqlalchemy`, `alembic`, `pydantic`, `pydantic-settings`, `authlib`/`python-jose`, `passlib`, `httpx`, `apscheduler`, `pytest`
-- **Frontend:** `next`, `react`, `typescript`, `zod`, `recharts`, `vitest`, `@playwright/test`
+- **Backend:** `fastapi`, `uvicorn`, `sqlalchemy`, `alembic`, `pydantic`, `pydantic-settings`, `email-validator`, `authlib` (OAuth client + JWT via `authlib.jose`), `bcrypt` (direct — not `passlib`; passlib is unmaintained against modern bcrypt releases, see `specs/01-auth-app-shell.md`), `itsdangerous` (backs Starlette's `SessionMiddleware`, used for the Google OAuth handshake), `httpx`, `apscheduler`, `pytest`
+- **Frontend:** `next`, `react`, `typescript`, `zod`, `recharts`, `vitest`, `@playwright/test`, `class-variance-authority`, `clsx`, `tailwind-merge`, `@radix-ui/react-*` (shadcn/ui primitives — see `07-ui-registry.md`)

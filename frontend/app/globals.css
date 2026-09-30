@@ -1,26 +1,75 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-input: var(--input);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-faint: var(--faint);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-gain: var(--gain);
+  --color-gain-bg: var(--gain-bg);
+  --color-loss: var(--loss);
+  --color-loss-bg: var(--loss-bg);
+  --color-gold: var(--gold);
+  --color-gold-bg: var(--gold-bg);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: 8px;
+  --radius-full: 999px;
+
+  --shadow-sm: var(--shadow-sm-value);
+
+  --font-sans: var(--font-inter), system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Values sourced from context/05-ui-tokens.md. Light theme only for MVP
+   (context/08-progress-tracker.md) — a .dark block is a future token-swap. */
+:root {
+  --background: #f7f7f8;
+  --foreground: #09090b;
+  --card: #ffffff;
+  --card-foreground: #09090b;
+  --border: #e4e4e7;
+  --border-subtle: #f1f1f3;
+  --input: #e4e4e7;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --faint: #a1a1aa;
+  --primary: #18181b;
+  --primary-foreground: #fafafa;
+  --accent: #4f46e5;
+  --accent-soft: #eef2ff;
+  --ring: #4f46e5;
+  --destructive: #dc2626;
+  --destructive-foreground: #fafafa;
+  --gain: #16a34a;
+  --gain-bg: #f0fdf4;
+  --loss: #dc2626;
+  --loss-bg: #fef2f2;
+  --gold: #d97706;
+  --gold-bg: #fef3c7;
+  --radius: 10px;
+  --shadow-sm-value: 0 1px 2px rgba(16, 17, 20, 0.06), 0 1px 3px rgba(16, 17, 20, 0.05);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  body {
+    @apply bg-background text-foreground;
+  }
 }

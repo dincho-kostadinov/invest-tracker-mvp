@@ -6,6 +6,10 @@ class Settings(BaseSettings):
 
     database_url: str
     frontend_origin: str = "http://localhost:3000"
+    backend_origin: str = "http://localhost:8000"
+    jwt_secret: str
+    google_client_id: str = ""
+    google_client_secret: str = ""
 
 
 settings = Settings()

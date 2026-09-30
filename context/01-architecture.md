@@ -78,9 +78,21 @@ current value is computed from the latest `price_snapshots` + `fx_rates`.
 
 ## Authentication
 
-- Backend-owned: JWT; Google OAuth + email/password. Token in an httpOnly cookie.
-- Every endpoint resolves the `user_id` from the token; frontend never trusts client-side identity.
-- Protected API routes require a valid token; every query is scoped to that user.
+- Backend-owned: JWT (Authlib); Google OAuth + email/password. Every endpoint resolves
+  the `user_id` from the token via `Depends(get_current_user)`; frontend never trusts
+  client-side identity. Protected API routes require a valid token; every query is
+  scoped to that user.
+- **The httpOnly session cookie is set by the frontend, not the backend** — frontend
+  and backend are different origins, so a cookie set directly by the backend would be
+  invisible to Next.js `proxy.ts` and to Server Components reading via `next/headers`.
+  Backend `/auth/*` endpoints are plain JSON (`{access_token}`), never `Set-Cookie`.
+  Next.js Route Handlers (`frontend/app/api/auth/*`) receive that token and set the
+  cookie on the frontend's own domain; every authenticated request then reads it via
+  `next/headers` and forwards it as `Authorization: Bearer <token>`. The backend still
+  owns 100% of the auth logic (issuing, signing, validating JWTs, the Google OAuth
+  exchange) — only which HTTP layer writes the cookie differs from a same-origin setup.
+  Full mechanism, including the Google OAuth same-origin-then-one-time-code handoff:
+  `specs/01-auth-app-shell.md`.
 
 ## Invariants
 
