@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     jwt_secret: str
     google_client_id: str = ""
     google_client_secret: str = ""
+    # Dev-only: password for the demo user created by `python -m app.seed`.
+    seed_demo_password: str = ""
 
 
 settings = Settings()

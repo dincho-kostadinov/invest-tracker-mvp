@@ -57,18 +57,29 @@
 - **Mutations:** frontend action → API → `domain` → DB → response; frontend revalidates.
 - **Valuation (scheduled):** backend job → `marketdata` (NAV + gold spot + FX) → write `price_snapshots` + `fx_rates` → compute + write `portfolio_snapshots`.
 
-## Data Model (first cut)
+## Data Model
+
+> Built in feature 02 (`specs/02-database-schema.md`). Numeric types per ADR-0003,
+> per-user assets + DB-enforced ownership per ADR-0004. All PKs are UUID.
 
 | Table | Key fields |
 | ----- | ---------- |
-| `users` | id, email, password_hash?, oauth fields |
+| `users` | id, email, password_hash?, google_id?, name? |
 | `accounts` | id, user_id, name, type (`fund_platform`\|`broker`\|`physical`) |
-| `assets` | id, kind (`FUND`\|`GOLD`\|`STOCK`), name, isin?, symbol?, currency, unit (`share`\|`gram`) |
-| `holdings` | id, user_id, account_id, asset_id, quantity, avg_cost_minor, currency |
-| `transactions` | id, user_id, holding_id, type (`BUY`\|`SELL`\|`DIVIDEND`\|`FEE`), quantity, price_minor, currency, fee_minor, occurred_at |
-| `price_snapshots` | id, asset_id, as_of, price_minor, currency, source |
-| `fx_rates` | id, as_of, base, quote, rate |
-| `portfolio_snapshots` | id, user_id, as_of, total_value_minor, base_currency (EUR) |
+| `assets` | id, **user_id**, kind (`FUND`\|`GOLD`\|`STOCK`), name, isin?, symbol?, currency, unit (`share`\|`gram`) — unique (user_id, isin) |
+| `holdings` | id, user_id, account_id, asset_id, quantity `NUMERIC(20,8)`, **cost_basis_minor**, currency — unique (account_id, asset_id) |
+| `transactions` | id, user_id, holding_id, type (`BUY`\|`SELL`\|`DIVIDEND`\|`FEE`), quantity?, price `NUMERIC(20,6)`?, amount_minor, fee_minor, currency, occurred_at |
+| `price_snapshots` | id, asset_id, as_of `DATE`, price `NUMERIC(20,6)`, currency, source — unique (asset_id, as_of) |
+| `fx_rates` | id, as_of `DATE`, base, quote, rate `NUMERIC(20,8)` — unique (as_of, base, quote); global |
+| `portfolio_snapshots` | id, user_id, as_of `DATE`, total_value_minor, base_currency (EUR) — unique (user_id, as_of) |
+
+- **Ownership:** `holdings` → `accounts`/`assets` and `transactions` → `holdings` use
+  composite FKs on `(parent_id, user_id)`, so a cross-user link is rejected by the DB.
+- **Deletes:** user → cascades everything; account/asset still used by a holding →
+  restricted; asset → cascades its price_snapshots; holding → cascades its
+  transactions; portfolio_snapshots are never touched by holding/asset deletes.
+- **Enumerations** are `VARCHAR` + `CHECK` constraints backed by Python `StrEnum`s
+  (not native Postgres `ENUM`).
 
 ## Returns
 
@@ -97,7 +108,10 @@ current value is computed from the latest `price_snapshots` + `fx_rates`.
 ## Invariants
 
 - The **frontend never calls the DB or market data directly** — only the backend API.
-- Money is stored as **integer minor units + a currency code** — never a float.
+- Money **amounts** are stored as **integer minor units + a currency code**; unit
+  prices, quantities, and FX rates as exact `NUMERIC` (`Decimal`) — never a float
+  (ADR-0003). Holdings store total cost basis, not a per-unit average.
+- Per-user ownership is **enforced by the database** via composite FKs (ADR-0004).
 - All market-data/platform calls go through the backend `marketdata` / `connectors`
   interfaces, wrapped in try/except, cached, never from routers or the frontend.
 - Every query is scoped to the current user — no cross-user access, ever.

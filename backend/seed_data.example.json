@@ -1,0 +1,42 @@
+{
+  "accounts": [
+    { "name": "Schroders", "type": "fund_platform" },
+    { "name": "Amundi", "type": "fund_platform" },
+    { "name": "Home safe", "type": "physical" }
+  ],
+  "holdings": [
+    {
+      "account": "Schroders",
+      "asset": { "kind": "FUND", "name": "Example Schroders Global Fund EUR", "isin": "XX0000000001", "currency": "EUR", "unit": "share" },
+      "quantity": "10",
+      "cost_basis": "1000.00",
+      "buys": [{ "occurred_at": "2025-01-15", "quantity": "10", "amount": "1000.00" }]
+    },
+    {
+      "account": "Amundi",
+      "asset": { "kind": "FUND", "name": "Example Amundi Equity Fund EUR", "isin": "XX0000000002", "currency": "EUR", "unit": "share" },
+      "quantity": "5.5",
+      "cost_basis": "2750.00",
+      "buys": [{ "occurred_at": "2025-02-10", "quantity": "5.5", "amount": "2750.00" }]
+    },
+    {
+      "account": "Amundi",
+      "asset": { "kind": "FUND", "name": "Example Amundi Bond Fund EUR", "isin": "XX0000000003", "currency": "EUR", "unit": "share" },
+      "quantity": "100.123",
+      "cost_basis": "2500.50",
+      "buys": [{ "occurred_at": "2025-03-05", "quantity": "100.123", "amount": "2500.50" }]
+    },
+    {
+      "account": "Home safe",
+      "asset": { "kind": "GOLD", "name": "Gold 24k", "currency": "EUR", "unit": "gram" },
+      "quantity": "7.5",
+      "cost_basis": "800.00",
+      "buys": [
+        { "occurred_at": "2024-10-01", "quantity": "2.5", "amount": "220.00" },
+        { "occurred_at": "2025-01-20", "quantity": "1", "amount": "100.00" },
+        { "occurred_at": "2025-06-15", "quantity": "3", "amount": "360.00" },
+        { "occurred_at": "2026-02-01", "quantity": "1", "amount": "120.00" }
+      ]
+    }
+  ]
+}

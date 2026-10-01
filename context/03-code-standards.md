@@ -12,7 +12,11 @@ Python/FastAPI backend + Next.js frontend.
 
 ## Money & Numbers (both sides)
 
-- Money is **integer minor units + currency code**. Never `float`/`number` for money.
+- Money **amounts** (costs, fees, values) are **integer minor units + currency code**
+  (`_minor` suffix). Unit prices, quantities, and FX rates are `Decimal` (DB `NUMERIC`).
+  Never `float`, and never a JS `number` for money arithmetic (ADR-0003).
+- Store totals, derive averages: a holding's avg cost = `cost_basis_minor / quantity`.
+- Value → amount rounding happens once, in `domain`, with `ROUND_HALF_EVEN`.
 - FX and unit conversions happen in the backend `domain` layer, never in UI or routers.
 
 ## Backend — Python / FastAPI
@@ -60,6 +64,7 @@ All config in env files (`.env` backend, `.env.local` frontend); never hardcode.
 | `BACKEND_ORIGIN` | backend/core/config (Google OAuth redirect URI) |
 | `JWT_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | backend/core/security, backend/core/oauth |
 | `MARKETDATA_*` (ADR-0001) | backend/marketdata |
+| `SEED_DEMO_PASSWORD` | backend/app/seed.py (demo user; dev only) |
 | `NEXT_PUBLIC_API_URL` | frontend/lib/api |
 
 ## Dependencies

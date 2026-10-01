@@ -6,6 +6,7 @@ backend/.mypy_cache/
 backend/.ruff_cache/
 backend/.pytest_cache/
 backend/.env
+backend/seed_data.json
 
 # Frontend (Next.js / npm)
 frontend/node_modules/
